@@ -5,6 +5,7 @@ import { formatDistance, formatSpeed, travelModeIcon, travelModeLabel } from '..
 import { formatDuration } from '../../utils/time';
 import { RoutePreview } from '../Trip/RoutePreview';
 import { ConfirmDialog } from '../common/ConfirmDialog';
+import { downloadBlob } from '../../utils/download';
 
 interface TripDetailProps {
   trip: Trip;
@@ -114,13 +115,4 @@ function Metric({ label, value }: { label: string; value: string }) {
       <div style={{ fontWeight: 700 }}>{value}</div>
     </div>
   );
-}
-
-function downloadBlob(blob: Blob, filename: string): void {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
 }

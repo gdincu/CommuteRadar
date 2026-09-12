@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import type { Trip as TripModel } from '../types/trip';
 import type { AppSettings } from '../types/settings';
 import type { TripTrackerState } from '../hooks/useTripTracker';
 import { ActiveTripPanel } from '../components/Trip/ActiveTripPanel';
+import { LockScreenOverlay } from '../components/Trip/LockScreenOverlay';
 import type { GeolocationStatus } from '../services/geolocation';
 
 interface TripPageProps {
@@ -27,6 +29,8 @@ export function TripPage({
   onResume,
   onStop
 }: TripPageProps) {
+  const [locked, setLocked] = useState(false);
+
   const gpsWarning =
     gpsStatus && gpsStatus.reason !== 'permission-denied' && gpsStatus.reason !== 'unsupported'
       ? gpsStatus.message
@@ -42,6 +46,10 @@ export function TripPage({
         gpsWarning={gpsWarning}
       />
 
+      <button className="secondary-button" onClick={() => setLocked(true)}>
+        🔒 Lock Screen
+      </button>
+
       <div className="stack" style={{ flexDirection: 'row' }}>
         {trackerState === 'active' ? (
           <button className="secondary-button" style={{ flex: 1 }} onClick={onPause}>
@@ -56,6 +64,8 @@ export function TripPage({
           Stop Trip
         </button>
       </div>
+
+      {locked && <LockScreenOverlay onUnlock={() => setLocked(false)} />}
     </div>
   );
 }

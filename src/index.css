@@ -205,3 +205,71 @@ p {
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+
+/* Lock screen overlay, shown while a trip is active to prevent accidental
+   taps on Pause/Stop while the phone rides in a pocket or mount. Colors use
+   the shared theme variables so it matches dark/light mode automatically. */
+.touch-lock-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  color: var(--text);
+  touch-action: pan-y;
+  padding-top: 15vh;
+}
+
+.lock-status {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 48px;
+}
+
+.unlock-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 80%;
+  max-width: 320px;
+  height: 44px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  outline: none;
+  margin: 10px 0;
+}
+
+.unlock-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: var(--touch-target);
+  height: var(--touch-target);
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: none;
+}
+
+.unlock-slider::-moz-range-thumb {
+  width: var(--touch-target);
+  height: var(--touch-target);
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: none;
+}
+
+.unlock-slider:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 4px;
+}
+
+.unlock-hint {
+  margin-top: 10px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}

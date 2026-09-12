@@ -3,6 +3,7 @@ import type { Trip } from '../types/trip';
 import type { AppSettings } from '../types/settings';
 import { TripListItem } from '../components/History/TripListItem';
 import { TripDetail } from '../components/History/TripDetail';
+import { exportTripsSummaryCsv } from '../utils/historyExport';
 
 interface HistoryProps {
   trips: Trip[];
@@ -32,7 +33,17 @@ export function History({ trips, settings, onDeleteTrip }: HistoryProps) {
 
   return (
     <div className="screen stack">
-      <h1>History</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h1 style={{ margin: 0 }}>History</h1>
+        {trips.length > 0 && (
+          <button
+            className="secondary-button"
+            onClick={() => exportTripsSummaryCsv(trips, settings.units)}
+          >
+            Export CSV
+          </button>
+        )}
+      </div>
       {trips.length === 0 ? (
         <div className="card">
           <p style={{ margin: 0 }}>No trips yet — completed commutes will show up here.</p>

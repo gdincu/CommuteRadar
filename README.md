@@ -107,6 +107,7 @@ Continuous GPS tracking inherently uses power — this app does not pretend othe
 - **Sample filtering** — poor-accuracy fixes, stationary GPS noise, and implausible jumps are rejected before they ever reach distance/speed math (`src/utils/geo.ts`).
 - **Sample decimation** — long trips are periodically thinned to bound storage growth without needing a full route-simplification algorithm.
 - **Wake Lock only while tracking** — the screen is allowed to sleep as soon as a trip is paused or stopped.
+- **Lock screen mode** — tap "🔒 Lock Screen" during a trip to cover Pause/Stop/nav with a full-screen overlay (`src/components/Trip/LockScreenOverlay.tsx`), unlocked with a slide gesture (or arrow keys/End, for keyboard access) — so the phone can safely ride in a pocket or mount without accidental taps ending the trip.
 
 ## Known gaps / things to verify after `npm install`
 
