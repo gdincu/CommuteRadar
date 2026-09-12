@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "homepage": "https://<your-username>.github.io/CommuteRadar/",
   "description": "A lightweight, local-first PWA for tracking recurring commutes (bike, run, walk, train) without a full mapping stack.",
   "scripts": {
     "dev": "vite",
@@ -11,7 +12,9 @@
     "lint": "eslint . --ext ts,tsx",
     "typecheck": "tsc -b --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "predeploy": "npm run typecheck && npm run test && npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "dependencies": {
     "idb": "^8.0.0",
@@ -27,6 +30,7 @@
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-react-refresh": "^0.4.7",
+    "gh-pages": "^6.3.0",
     "jsdom": "^24.1.0",
     "typescript": "^5.5.3",
     "vite": "^5.3.3",
