@@ -5,9 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#0b1622" />
     <meta name="description" content="CommuteRadar — track your recurring commute without a heavy map." />
-    <link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg" />
-    <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
-    <link rel="manifest" href="/manifest.webmanifest" />
+    <!-- %BASE_URL% is replaced by Vite with the configured `base` (see
+         vite.config.ts), so these still resolve correctly under a GitHub
+         Pages subpath. The manifest link itself is injected automatically
+         by vite-plugin-pwa at build time — no need to declare it here. -->
+    <link rel="icon" type="image/svg+xml" href="%BASE_URL%icons/icon-192.svg" />
+    <link rel="apple-touch-icon" href="%BASE_URL%icons/icon-192.svg" />
     <title>CommuteRadar</title>
   </head>
   <body>

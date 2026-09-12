@@ -31,13 +31,11 @@ const ACTIVE_TRIP_KEY = 'current';
 
 let dbPromise: Promise<IDBPDatabase<CommuteRadarDB>> | null = null;
 
-class StorageUnavailableError extends Error {
-  cause?: unknown;
-
-  constructor(message?: string, options?: { cause?: unknown }) {
-    super(message); // Pass only 1 argument
+export class StorageUnavailableError extends Error {
+  constructor(cause?: unknown) {
+    super('Local storage is unavailable in this browser.');
     this.name = 'StorageUnavailableError';
-    this.cause = options?.cause;
+    this.cause = cause;
   }
 }
 

@@ -41,7 +41,9 @@ export function showCheckpointNotification(input: CheckpointNotificationInput): 
   try {
     new Notification('CommuteRadar', {
       body,
-      icon: '/icons/icon-192.svg',
+      // Base-relative so this still resolves when served from a subpath
+      // (e.g. a GitHub Pages project site) rather than the domain root.
+      icon: `${import.meta.env.BASE_URL}icons/icon-192.svg`,
       tag: `checkpoint-${input.checkpointName}` // collapse duplicate notifications for the same checkpoint
     });
   } catch {
