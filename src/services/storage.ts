@@ -32,6 +32,10 @@ const ACTIVE_TRIP_KEY = 'current';
 let dbPromise: Promise<IDBPDatabase<CommuteRadarDB>> | null = null;
 
 export class StorageUnavailableError extends Error {
+  // Declared explicitly rather than relying on lib.es2022.error's built-in
+  // `cause` typing, since this project targets ES2020.
+  cause?: unknown;
+
   constructor(cause?: unknown) {
     super('Local storage is unavailable in this browser.');
     this.name = 'StorageUnavailableError';

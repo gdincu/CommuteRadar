@@ -20,6 +20,8 @@ npm install
 
 > **Note:** this project was scaffolded without network access, so dependencies have never actually been installed or built in this environment. Run `npm install` and then `npm run build` / `npm test` yourself and fix anything that surfaces — the code has been written carefully but not machine-verified end-to-end.
 
+**Dependency versions are pinned exactly (no `^`/`~`)** in `package.json` on purpose — Vite 5, `@vitejs/plugin-react` 4.3.x, `vite-plugin-pwa` 0.20.x, and Vitest 1.6.x are a known-compatible set. Don't run a blanket `npm update`/`npm install <pkg>@latest` on these without checking that the new versions still support each other (Vite's major version bumps frequently break `@vitejs/plugin-react`/`vite-plugin-pwa` compatibility for a release or two). If you do commit a `package-lock.json`, the CI workflow currently runs `npm install` rather than `npm ci` for that reason — switch it back to `npm ci` once you have a lockfile you trust, for fully reproducible installs.
+
 ## Development commands
 
 ```bash
