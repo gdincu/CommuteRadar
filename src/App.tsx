@@ -94,6 +94,13 @@ export default function App() {
     setTrips((prev) => prev.filter((t) => t.id !== id));
   };
 
+  const importTrips = (imported: Trip[]) => {
+    void Promise.all(imported.map((trip) => tripRepository.save(trip)));
+    setTrips((prev) =>
+      [...imported, ...prev].sort((a, b) => (a.startedAt < b.startedAt ? 1 : a.startedAt > b.startedAt ? -1 : 0))
+    );
+  };
+
   const handleStart = (mode: TravelMode) => {
     tracker.start(mode);
   };
@@ -149,7 +156,9 @@ export default function App() {
         />
       )}
 
-      {route === 'history' && <History trips={trips} settings={settings} onDeleteTrip={deleteTrip} />}
+      {route === 'history' && (
+        <History trips={trips} settings={settings} onDeleteTrip={deleteTrip} onImportTrips={importTrips} />
+      )}
 
       {route === 'settings' && (
         <Settings

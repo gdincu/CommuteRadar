@@ -21,29 +21,36 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'prompt', // we surface our own "update available" banner instead of silent reloads
-      includeAssets: ['icons/icon-192.svg', 'icons/icon-512.svg'],
+      includeAssets: ['icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'],
       manifest: {
         name: 'CommuteRadar',
         short_name: 'CommuteRadar',
         description: 'Track your recurring commute — distance, speed, and checkpoints — without a heavy map.',
         theme_color: '#0b1622',
         background_color: '#0b1622',
-        display: 'standalone',
+        display: 'fullscreen',
         orientation: 'portrait',
         // Relative, not root-absolute: correct whether the site is served
         // from a GitHub Pages subpath or a custom domain at the root.
         start_url: '.',
         scope: '.',
         icons: [
-          { src: 'icons/icon-192.svg', sizes: '192x192', type: 'image/svg+xml', purpose: 'any' },
-          { src: 'icons/icon-512.svg', sizes: '512x512', type: 'image/svg+xml', purpose: 'any' },
-          { src: 'icons/icon-maskable.svg', sizes: '512x512', type: 'image/svg+xml', purpose: 'maskable' }
-        ]
+          // PNG, not SVG: Chrome's Android installability check (the thing
+          // that decides whether "Add to Home Screen" produces a real
+          // installed WebAPK — which honors `display` — vs. a plain browser
+          // shortcut/bookmark — which doesn't) requires PNG/WebP icons.
+          // SVG-only manifest icons can silently fail that check, which is
+          // why `display: 'fullscreen'` had no effect before.
+          { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: 'icons/icon-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+        ],
+        display_override: ['fullscreen', 'standalone'],
       },
       workbox: {
         // App-shell precaching only. No runtime caching rules are added for
         // any map/tile provider — this app has none.
-        globPatterns: ['**/*.{js,css,html,svg}'],
+        globPatterns: ['**/*.{js,css,html,svg,png}'],
         // Left unset so the plugin derives the correct base-relative
         // fallback itself — hardcoding '/index.html' would 404 under a
         // GitHub Pages subpath.

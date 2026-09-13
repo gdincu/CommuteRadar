@@ -58,8 +58,8 @@ If you'd rather deploy manually, `npm run build` and publish the `dist/` folder 
 
 ## PWA setup
 
-- The manifest is generated from `vite.config.ts` (name, theme colors, icons, `display: 'standalone'`).
-- Icons are simple SVGs in `public/icons/`. **These are placeholders** — for a real release, generate proper PNG icons (192×192, 512×512, and a maskable variant) since some platforms (notably iOS home-screen icons) don't handle SVG manifest icons well. This project's sandbox had no network access, so PNGs couldn't be generated here.
+- The manifest is generated from `vite.config.ts` (name, theme colors, icons, `display: 'fullscreen'` with a `display_override` fallback to `'standalone'`).
+- App icons are real PNGs in `public/icons/` (192×192, 512×512, a maskable 512×512, and a 180×180 apple-touch-icon), rasterized from the original SVG design. This matters beyond cosmetics: Chrome's Android installability check (which decides whether "Add to Home Screen" produces a real installed app that honors `display`, vs. a plain browser bookmark that ignores it) requires PNG/WebP icons — SVG-only manifest icons can silently fail that check, which is why `display: 'fullscreen'` may have no visible effect even though it's set correctly.
 - `registerType: 'prompt'` is used deliberately: updates never silently reload the app out from under an active trip. `src/registerServiceWorker.ts` shows an in-app "update available" banner instead.
 - Install: use the browser's native "Add to Home Screen" / "Install app" prompt. There's a short explainer in Settings.
 
@@ -109,8 +109,19 @@ Continuous GPS tracking inherently uses power — this app does not pretend othe
 - **Wake Lock only while tracking** — the screen is allowed to sleep as soon as a trip is paused or stopped.
 - **Lock screen mode** — tap "🔒 Lock Screen" during a trip to cover Pause/Stop/nav with a full-screen overlay (`src/components/Trip/LockScreenOverlay.tsx`), unlocked with a slide gesture (or arrow keys/End, for keyboard access) — so the phone can safely ride in a pocket or mount without accidental taps ending the trip.
 
+## Cross-device trip import/export
+
+CommuteRadar has no account and no sync — trips stay on the device that recorded them. If you record on one phone and want that history to show up on another, use History's **Export CSV** / **Import CSV**:
+
+- **Export CSV** (History page) writes one row per trip: Date, Start datetime, Sport, Distance, Duration, Avg speed.
+- **Import CSV** (same page) reads that file back in and adds each row as a trip on this device.
+
+**This is a lossy round-trip by design.** The summary CSV never contained GPS samples, route segments, or checkpoint events — only the headline numbers — so an imported trip shows correctly in the history list and its own metrics, but its detail view won't have a route preview, segments, or checkpoint log. For full-fidelity backup/restore of a single trip (including the route), use that trip's own **Export JSON** in its detail view — there's currently no matching JSON *import*, only the CSV summary import described here.
+
+Importing the same CSV twice creates duplicate entries — nothing currently deduplicates by date/mode/distance. Malformed rows (bad duration/distance/sport values) are skipped individually with an inline error message rather than failing the whole import.
+
 ## Known gaps / things to verify after `npm install`
 
 - Nothing in this repository has been run through `tsc`, `vite build`, `eslint`, or `vitest` in this environment (no network access to install dependencies). Please run all four and fix anything that surfaces.
-- PNG app icons still need to be generated for full iOS/Android install compatibility (see PWA setup above).
+- Even with a WebAPK install and `display: 'fullscreen'` correctly applied, Android still reserves a thin edge zone for the system back-gesture — a swipe in from that edge can still briefly reveal the nav bar. That's an OS-level reservation, not something a web app can opt out of. iOS Safari doesn't support `fullscreen` at all (only `standalone`), so this is an Android-only improvement.
 - The optional SVG route preview is a flat equirectangular-ish projection for a quick visual sanity check, not a distance-accurate rendering — this is intentional per the "no mapping app" requirement, but worth knowing.

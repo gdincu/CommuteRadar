@@ -43,7 +43,7 @@ export function showCheckpointNotification(input: CheckpointNotificationInput): 
       body,
       // Base-relative so this still resolves when served from a subpath
       // (e.g. a GitHub Pages project site) rather than the domain root.
-      icon: `${import.meta.env.BASE_URL}icons/icon-192.svg`,
+      icon: `${import.meta.env.BASE_URL}icons/icon-192.png`,
       tag: `checkpoint-${input.checkpointName}` // collapse duplicate notifications for the same checkpoint
     });
   } catch {
