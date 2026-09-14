@@ -3,10 +3,10 @@
 // mock shape differs per test — this file only sets safe global defaults so
 // importing modules that reference these APIs at module-load time doesn't throw.
 
-if (typeof (globalThis as any).Notification === 'undefined') {
-  (globalThis as any).Notification = class {
-    static permission = 'default';
-    static requestPermission = async () => 'default';
+if (typeof Notification === 'undefined') {
+  (globalThis as unknown as { Notification: unknown }).Notification = class {
+    static permission: NotificationPermission = 'default';
+    static requestPermission = async (): Promise<NotificationPermission> => 'default';
     constructor(public title: string, public options?: NotificationOptions) {}
   };
 }

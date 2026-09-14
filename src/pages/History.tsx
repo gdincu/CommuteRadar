@@ -4,7 +4,7 @@ import type { AppSettings } from '../types/settings';
 import { TripListItem } from '../components/History/TripListItem';
 import { TripDetail } from '../components/History/TripDetail';
 import { exportTripsSummaryCsv } from '../utils/historyExport';
-import { parseTripsSummaryCsv } from '../utils/historyImport';
+import { filterDuplicateTrips, parseTripsSummaryCsv } from '../utils/historyImport';
 import { StatusBadge } from '../components/common/StatusBadge';
 
 interface HistoryProps {
@@ -16,6 +16,7 @@ interface HistoryProps {
 
 interface ImportResult {
   importedCount: number;
+  skippedDuplicates: number;
   errors: string[];
 }
 
@@ -36,13 +37,18 @@ export function History({ trips, settings, onDeleteTrip, onImportTrips }: Histor
     e.target.value = ''; // allow re-selecting the same file next time
     if (!file) return;
 
-    const text = await file.text();
-    const { trips: parsedTrips, errors } = parseTripsSummaryCsv(text);
+    try {
+      const text = await file.text();
+      const { trips: parsedTrips, errors } = parseTripsSummaryCsv(text);
+      const { newTrips, skippedCount } = filterDuplicateTrips(trips, parsedTrips);
 
-    if (parsedTrips.length > 0) {
-      onImportTrips(parsedTrips);
+      if (newTrips.length > 0) {
+        onImportTrips(newTrips);
+      }
+      setImportResult({ importedCount: newTrips.length, skippedDuplicates: skippedCount, errors });
+    } catch {
+      setImportResult({ importedCount: 0, skippedDuplicates: 0, errors: ['Could not read the selected file.'] });
     }
-    setImportResult({ importedCount: parsedTrips.length, errors });
   };
 
   if (selectedTrip) {
@@ -90,6 +96,12 @@ export function History({ trips, settings, onDeleteTrip, onImportTrips }: Histor
         <div className="card stack" role="status">
           {importResult.importedCount > 0 && (
             <StatusBadge tone="success" label={`Imported ${importResult.importedCount} trip${importResult.importedCount === 1 ? '' : 's'}`} />
+          )}
+          {importResult.skippedDuplicates > 0 && (
+            <StatusBadge
+              tone="warning"
+              label={`Skipped ${importResult.skippedDuplicates} duplicate${importResult.skippedDuplicates === 1 ? '' : 's'} already in history`}
+            />
           )}
           {importResult.errors.length > 0 && (
             <div className="stack" style={{ gap: 4 }}>

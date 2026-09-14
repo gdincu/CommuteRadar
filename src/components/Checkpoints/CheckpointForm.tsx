@@ -20,6 +20,7 @@ export function CheckpointForm({ initial, onSave, onCancel }: CheckpointFormProp
   );
   const [locating, setLocating] = useState(false);
   const [locateError, setLocateError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const useCurrentLocation = () => {
     if (!('geolocation' in navigator)) {
@@ -47,7 +48,23 @@ export function CheckpointForm({ initial, onSave, onCancel }: CheckpointFormProp
     const lat = parseFloat(latitude);
     const lon = parseFloat(longitude);
     const rad = parseFloat(radius);
-    if (!name.trim() || Number.isNaN(lat) || Number.isNaN(lon) || Number.isNaN(rad)) return;
+    if (!name.trim() || Number.isNaN(lat) || Number.isNaN(lon) || Number.isNaN(rad)) {
+      setFormError('Please fill in every field with a valid value.');
+      return;
+    }
+    if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+      setFormError('Latitude must be between -90 and 90, and longitude between -180 and 180.');
+      return;
+    }
+    if (rad <= 0) {
+      setFormError('Radius must be a positive number of meters.');
+      return;
+    }
+    if (whatsappEnabled && whatsappPhone.replace(/\D/g, '').length < 8) {
+      setFormError('Enter a WhatsApp number with country code, digits only (e.g. 40712345678) — otherwise no message can be prepared.');
+      return;
+    }
+    setFormError(null);
 
     const checkpoint: Checkpoint = {
       id: initial?.id ?? crypto.randomUUID(),
@@ -147,6 +164,8 @@ export function CheckpointForm({ initial, onSave, onCancel }: CheckpointFormProp
           </p>
         </div>
       )}
+
+      {formError && <p role="alert">{formError}</p>}
 
       <div className="stack" style={{ flexDirection: 'row' }}>
         <button type="button" className="secondary-button" style={{ flex: 1 }} onClick={onCancel}>

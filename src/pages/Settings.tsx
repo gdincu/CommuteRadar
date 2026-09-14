@@ -128,6 +128,29 @@ export function Settings({
         />
       )}
 
+      {notifications.isSupported && (
+        <div className="card stack">
+          <h3>Checkpoint alerts</h3>
+          <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+            <input
+              type="checkbox"
+              checked={settings.notificationsEnabled}
+              disabled={notifications.permission !== 'granted'}
+              onChange={(e) => onUpdateSettings({ notificationsEnabled: e.target.checked })}
+              style={{ marginTop: 4 }}
+            />
+            <span>
+              <div style={{ fontWeight: 600 }}>Enable checkpoint notifications</div>
+              <div className="metric-label" style={{ textTransform: 'none', letterSpacing: 0 }}>
+                {notifications.permission !== 'granted'
+                  ? 'Grant browser permission above first — then turn alerts on here.'
+                  : 'Master switch for all checkpoint arrival notifications. Individual checkpoints still opt in separately.'}
+              </div>
+            </span>
+          </label>
+        </div>
+      )}
+
       <div className="card stack">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h3 style={{ margin: 0 }}>Checkpoints</h3>

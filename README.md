@@ -104,7 +104,7 @@ Continuous GPS tracking inherently uses power — this app does not pretend othe
 - **Configurable GPS profile** (Settings → Battery & GPS accuracy): Battery saver / Balanced / High accuracy, trading `enableHighAccuracy`, `maximumAge`, and sample-acceptance thresholds against each other (`src/types/settings.ts`).
 - **Throttled UI updates** — the active-trip screen re-renders at most once per second regardless of how often GPS callbacks fire.
 - **Batched persistence** — the in-progress trip is written to IndexedDB at most every 5 seconds, not on every GPS tick.
-- **Sample filtering** — poor-accuracy fixes, stationary GPS noise, and implausible jumps are rejected before they ever reach distance/speed math (`src/utils/geo.ts`).
+- **Sample filtering + pause/dwell handling** — poor-accuracy fixes and implausible jumps are rejected before they ever reach distance/speed math (`src/utils/geo.ts`), and sub-noise wobble is kept out of distance by anchor hysteresis in `src/services/metrics.ts`: distance only advances once *net* displacement from the last moving fix escapes the noise floor, so red lights/train stops add nothing while slow walking (whose individual steps are also sub-noise) still accumulates once it pushes past the floor.
 - **Sample decimation** — long trips are periodically thinned to bound storage growth without needing a full route-simplification algorithm.
 - **Wake Lock only while tracking** — the screen is allowed to sleep as soon as a trip is paused or stopped.
 - **Lock screen mode** — tap "🔒 Lock Screen" during a trip to cover Pause/Stop/nav with a full-screen overlay (`src/components/Trip/LockScreenOverlay.tsx`), unlocked with a slide gesture (or arrow keys/End, for keyboard access) — so the phone can safely ride in a pocket or mount without accidental taps ending the trip.
@@ -118,7 +118,7 @@ CommuteRadar has no account and no sync — trips stay on the device that record
 
 **This is a lossy round-trip by design.** The summary CSV never contained GPS samples, route segments, or checkpoint events — only the headline numbers — so an imported trip shows correctly in the history list and its own metrics, but its detail view won't have a route preview, segments, or checkpoint log. For full-fidelity backup/restore of a single trip (including the route), use that trip's own **Export JSON** in its detail view — there's currently no matching JSON *import*, only the CSV summary import described here.
 
-Importing the same CSV twice creates duplicate entries — nothing currently deduplicates by date/mode/distance. Malformed rows (bad duration/distance/sport values) are skipped individually with an inline error message rather than failing the whole import.
+Importing the same CSV twice no longer creates duplicates — rows matching an existing trip by start time, sport, distance, and duration (plus repeats within the file itself) are skipped with a notice. Malformed rows (bad duration/distance/sport values) are skipped individually with an inline error message rather than failing the whole import.
 
 ## Known gaps / things to verify after `npm install`
 

@@ -65,6 +65,10 @@ function getDb(): Promise<IDBPDatabase<CommuteRadarDB>> {
         }
       }
     }).catch((err) => {
+      // Don't cache a rejection: a transient failure (locked DB, aborted
+      // upgrade, private-browsing hiccup) must not poison every later call
+      // until reload. Clear the cache so the next caller retries openDB.
+      dbPromise = null;
       throw new StorageUnavailableError(err);
     });
   }

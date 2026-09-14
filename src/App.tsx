@@ -14,6 +14,8 @@ import {
 } from './services/storage';
 import { requestLocationPermissionState } from './services/geolocation';
 import { DeepLinkWhatsAppService } from './services/whatsapp';
+import { filterDuplicateTrips } from './utils/historyImport';
+import { StatusBadge } from './components/common/StatusBadge';
 import type { Checkpoint } from './types/checkpoint';
 import type { AppSettings } from './types/settings';
 import { DEFAULT_SETTINGS } from './types/settings';
@@ -28,16 +30,23 @@ export default function App() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [locationPermission, setLocationPermission] = useState<PermissionState | 'unsupported'>('unsupported');
   const [loaded, setLoaded] = useState(false);
+  const [storageUnavailable, setStorageUnavailable] = useState(false);
 
   useEffect(() => {
-    void Promise.all([settingsRepository.get(), checkpointRepository.getAll(), tripRepository.getAll()]).then(
-      ([storedSettings, storedCheckpoints, storedTrips]) => {
+    void Promise.all([settingsRepository.get(), checkpointRepository.getAll(), tripRepository.getAll()])
+      .then(([storedSettings, storedCheckpoints, storedTrips]) => {
         setSettings(storedSettings);
         setCheckpoints(storedCheckpoints);
         setTrips(storedTrips);
         setLoaded(true);
-      }
-    );
+      })
+      .catch(() => {
+        // IndexedDB is unavailable or blocked (e.g. some private-browsing
+        // modes). Rendering with defaults beats hanging on "Loading…"
+        // forever; tracking still works, it just can't persist.
+        setStorageUnavailable(true);
+        setLoaded(true);
+      });
     void requestLocationPermissionState().then(setLocationPermission);
   }, []);
 
@@ -95,10 +104,16 @@ export default function App() {
   };
 
   const importTrips = (imported: Trip[]) => {
-    void Promise.all(imported.map((trip) => tripRepository.save(trip)));
-    setTrips((prev) =>
-      [...imported, ...prev].sort((a, b) => (a.startedAt < b.startedAt ? 1 : a.startedAt > b.startedAt ? -1 : 0))
-    );
+    // Defensive second layer: History already filters against current trips
+    // for display, but re-check here so no code path can persist duplicates
+    // (IDs are random per parse, so identity is by content key, not id).
+    const { newTrips } = filterDuplicateTrips(trips, imported);
+    if (newTrips.length === 0) return;
+    void Promise.all(newTrips.map((trip) => tripRepository.save(trip)));
+    setTrips((prev) => {
+      const { newTrips: fresh } = filterDuplicateTrips(prev, newTrips);
+      return [...fresh, ...prev].sort((a, b) => (a.startedAt < b.startedAt ? 1 : a.startedAt > b.startedAt ? -1 : 0));
+    });
   };
 
   const handleStart = (mode: TravelMode) => {
@@ -106,12 +121,30 @@ export default function App() {
   };
 
   const handleStop = () => {
-    void tracker.stop().then((finished) => {
-      if (finished && finished.status === 'completed') {
-        setTrips((prev) => [finished, ...prev]);
-      }
-      navigate('home');
-    });
+    void tracker
+      .stop()
+      .then((finished) => {
+        if (finished && finished.status === 'completed') {
+          setTrips((prev) => [finished, ...prev]);
+        }
+        navigate('home');
+      })
+      .catch(() => {
+        // finalize should not reject anymore, but if something unexpected
+        // does, don't leave the user stranded on a half-stopped trip.
+        navigate('home');
+      });
+  };
+
+  const handleDiscard = () => {
+    void tracker
+      .cancel()
+      .then(() => {
+        navigate('home');
+      })
+      .catch(() => {
+        navigate('home');
+      });
   };
 
   const lastTrip = useMemo(() => trips[0] ?? null, [trips]);
@@ -128,6 +161,15 @@ export default function App() {
 
   return (
     <div className="app-shell">
+      {storageUnavailable && (
+        <div style={{ padding: '12px 20px 0' }}>
+          <StatusBadge
+            tone="warning"
+            label="Local storage is unavailable — settings, checkpoints, and trips won't be saved."
+          />
+        </div>
+      )}
+
       {route === 'home' && (
         <Home
           settings={settings}
@@ -153,6 +195,7 @@ export default function App() {
           onPause={tracker.pause}
           onResume={tracker.resume}
           onStop={handleStop}
+          onDiscard={handleDiscard}
         />
       )}
 

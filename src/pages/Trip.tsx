@@ -4,6 +4,7 @@ import type { AppSettings } from '../types/settings';
 import type { TripTrackerState } from '../hooks/useTripTracker';
 import { ActiveTripPanel } from '../components/Trip/ActiveTripPanel';
 import { LockScreenOverlay } from '../components/Trip/LockScreenOverlay';
+import { ConfirmDialog } from '../components/common/ConfirmDialog';
 import type { GeolocationStatus } from '../services/geolocation';
 
 interface TripPageProps {
@@ -16,6 +17,7 @@ interface TripPageProps {
   onPause: () => void;
   onResume: () => void;
   onStop: () => void;
+  onDiscard: () => void;
 }
 
 export function TripPage({
@@ -27,9 +29,11 @@ export function TripPage({
   gpsStatus,
   onPause,
   onResume,
-  onStop
+  onStop,
+  onDiscard
 }: TripPageProps) {
   const [locked, setLocked] = useState(false);
+  const [confirmingDiscard, setConfirmingDiscard] = useState(false);
 
   const gpsWarning =
     gpsStatus && gpsStatus.reason !== 'permission-denied' && gpsStatus.reason !== 'unsupported'
@@ -64,6 +68,23 @@ export function TripPage({
           Stop Trip
         </button>
       </div>
+
+      <button className="secondary-button" onClick={() => setConfirmingDiscard(true)}>
+        Discard trip
+      </button>
+
+      <ConfirmDialog
+        open={confirmingDiscard}
+        title="Discard this trip?"
+        description="This deletes the current recording without saving it to history. This can't be undone."
+        confirmLabel="Discard"
+        danger
+        onCancel={() => setConfirmingDiscard(false)}
+        onConfirm={() => {
+          setConfirmingDiscard(false);
+          onDiscard();
+        }}
+      />
 
       {locked && <LockScreenOverlay onUnlock={() => setLocked(false)} />}
     </div>

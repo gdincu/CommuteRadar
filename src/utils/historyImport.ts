@@ -179,3 +179,40 @@ function parseSpeedMps(text: string): number | null {
 function parseSportLabel(label: string): TravelMode {
   return SPORT_LABEL_TO_MODE[label.trim().toLowerCase()] ?? 'other';
 }
+
+/**
+ * Stable identity for a summary-imported trip. Summary CSV rows carry no
+ * IDs (each parse mints a random UUID), so re-importing the same file would
+ * otherwise duplicate history entries. The key combines start time, mode,
+ * rounded distance, and duration — enough to recognize "same trip again"
+ * across metric/imperial round-trips (rounding absorbs ft/mi formatting
+ * loss) without colliding distinct trips.
+ */
+function tripImportKey(
+  trip: Pick<Trip, 'startedAt' | 'mode' | 'distanceMeters' | 'durationMs'>
+): string {
+  return `${trip.startedAt}|${trip.mode}|${Math.round(trip.distanceMeters)}|${trip.durationMs}`;
+}
+
+/**
+ * Splits import candidates into genuinely new trips vs. duplicates of
+ * already-known trips (or of each other within the same file).
+ */
+export function filterDuplicateTrips(
+  existing: Pick<Trip, 'startedAt' | 'mode' | 'distanceMeters' | 'durationMs'>[],
+  candidates: Trip[]
+): { newTrips: Trip[]; skippedCount: number } {
+  const seen = new Set(existing.map(tripImportKey));
+  const newTrips: Trip[] = [];
+  let skippedCount = 0;
+  for (const candidate of candidates) {
+    const key = tripImportKey(candidate);
+    if (seen.has(key)) {
+      skippedCount += 1;
+      continue;
+    }
+    seen.add(key);
+    newTrips.push(candidate);
+  }
+  return { newTrips, skippedCount };
+}

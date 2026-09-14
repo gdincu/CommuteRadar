@@ -60,5 +60,10 @@ export function formatClockDate(iso: string): string {
 
   if (isSameDay(date, today)) return 'Today';
   if (isSameDay(date, yesterday)) return 'Yesterday';
-  return date.toLocaleDateString(undefined, { weekday: 'long' });
+  // Anything older needs the date itself — a bare weekday is ambiguous
+  // ("Monday" could mean six different days).
+  const sameYear = date.getFullYear() === today.getFullYear();
+  return sameYear
+    ? date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })
+    : date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 }

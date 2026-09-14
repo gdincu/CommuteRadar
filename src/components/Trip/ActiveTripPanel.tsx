@@ -34,7 +34,9 @@ export function ActiveTripPanel({ trip, currentSpeedMps, units, reachedCheckpoin
 
       <div className="card stack" style={{ textAlign: 'center' }}>
         <span className="metric-label">Elapsed time</span>
-        <span className="metric-value" style={{ fontSize: '3rem' }} aria-live="polite">
+        {/* No aria-live here: the value updates every second, which would make
+            screen readers re-announce it continuously. */}
+        <span className="metric-value" style={{ fontSize: '3rem' }}>
           {formatDuration(trip.durationMs)}
         </span>
         <span className="metric-label">Distance</span>

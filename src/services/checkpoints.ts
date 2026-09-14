@@ -1,9 +1,39 @@
 import type { Checkpoint, CheckpointEvent, CheckpointProximityState } from '../types/checkpoint';
+import type { Trip } from '../types/trip';
 import { calculateDistance } from '../utils/geo';
 import { nowIso } from '../utils/time';
 
 export function createProximityState(): CheckpointProximityState {
   return new Map();
+}
+
+/**
+ * Rebuilds proximity state after a reload/recovery so sitting inside a
+ * checkpoint's radius doesn't re-fire a duplicate event.
+ *
+ * Uses the recovered trip's last known position: a checkpoint that already
+ * has an event in the recovered trip AND still contains that last position
+ * restarts as 'inside' (next fix inside → no event). Everything else
+ * restarts as 'outside', so a genuinely new entry — including a first entry
+ * for a checkpoint that never fired before the reload — still fires.
+ */
+export function restoreProximityState(checkpoints: Checkpoint[], recoveredTrip: Trip): CheckpointProximityState {
+  const state = createProximityState();
+  const samples = recoveredTrip.samples;
+  const last = samples.length > 0 ? samples[samples.length - 1] : undefined;
+  const firedIds = new Set(recoveredTrip.checkpoints.map((e) => e.checkpointId));
+
+  for (const checkpoint of checkpoints) {
+    if (!checkpoint.enabled) continue;
+    if (!last || !firedIds.has(checkpoint.id)) {
+      state.set(checkpoint.id, 'outside');
+      continue;
+    }
+    const distance = calculateDistance(last.latitude, last.longitude, checkpoint.latitude, checkpoint.longitude);
+    state.set(checkpoint.id, distance <= checkpoint.radiusMeters ? 'inside' : 'outside');
+  }
+
+  return state;
 }
 
 /**
