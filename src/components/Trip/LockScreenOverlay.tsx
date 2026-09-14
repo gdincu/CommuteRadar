@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface LockScreenOverlayProps {
   onUnlock: () => void;
@@ -25,6 +25,25 @@ export function LockScreenOverlay({ onUnlock }: LockScreenOverlayProps) {
     }
     setSliderValue(value);
   };
+
+  // Snap the slider back to 0 when a drag/tap is released without reaching
+  // the threshold — otherwise a half-dragged slider would sit partway and a
+  // later accidental nudge in a pocket could finish the unlock. Listened on
+  // window (not just the input) so releasing outside the thumb still resets.
+  // Keyboard interaction is exempt: arrow-key steps must persist between key
+  // presses, or arrows could never climb to 95 (End still jumps straight
+  // there and unlocks).
+  useEffect(() => {
+    const handleRelease = () => {
+      setSliderValue((current) => (current >= UNLOCK_THRESHOLD ? current : 0));
+    };
+    window.addEventListener('pointerup', handleRelease);
+    window.addEventListener('touchend', handleRelease);
+    return () => {
+      window.removeEventListener('pointerup', handleRelease);
+      window.removeEventListener('touchend', handleRelease);
+    };
+  }, []);
 
   return (
     <div className="touch-lock-overlay" role="dialog" aria-modal="true" aria-label="Screen locked while tracking">
